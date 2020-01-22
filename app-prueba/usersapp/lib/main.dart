@@ -21,7 +21,7 @@ class _HomePageState extends State<HomePage> {
   List usersData;
 
   Future getUsers() async {
-    http.Response response = await http.get('http://10.0.0.2:4000/api/users');
+    http.Response response = await http.get('http://10.0.2.2:4000/api/users');
     // debugPrint(response.body);
     data = json.decode(response.body);
     setState(() {
