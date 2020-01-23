@@ -21,12 +21,15 @@ class _HomePageState extends State<HomePage> {
   List usersData;
 
   Future getUsers() async {
-    http.Response response = await http.get('http://10.0.2.2:4000/api/users');
+    http.Response response = await http.get('http://192.168.0.5:8080/api/user');
     // debugPrint(response.body);
-    data = json.decode(response.body);
+    //data = json.decode(response.body);
     setState(() {
-      usersData = data['users'];
+      usersData = json.decode(response.body);
+      print("------JSON: >");
+      print(usersData);
     });
+    
     // debugPrint(usersData.toString());
     debugPrint(usersData.length.toString());
   }
@@ -61,13 +64,13 @@ class _HomePageState extends State<HomePage> {
                           TextStyle(fontSize: 20.0, fontWeight: FontWeight.w500),
                     ),
                   ),
-                  CircleAvatar(
-                      backgroundImage:
-                          NetworkImage(usersData[index]['avatar'])),
+                  //CircleAvatar(
+                    //  backgroundImage:
+                      //    NetworkImage(usersData[index]['avatar'])),
                   Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Text(
-                      "${usersData[index]["firstName"]} ${usersData[index]["lastName"]}",
+                      "${usersData[index]["usuario"]} ${usersData[index]["nombre"]}",
                       style: TextStyle(
                           fontSize: 20.0, fontWeight: FontWeight.w700),
                     ),
