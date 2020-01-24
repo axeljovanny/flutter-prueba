@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
+import 'package:fluttertoast/fluttertoast.dart';
 
 void main() {
   runApp(
@@ -17,8 +18,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final formKey = GlobalKey<FormState>();
   Map data;
   List usersData;
+
+  /*** ----------------------------- ***/
+  String _nombre, _usuario;
+  // Crea un controlador de texto para recuperar el valor actual
+  final myController = TextEditingController();
+  final myController2 = TextEditingController();
+
 
   Future getUsers() async {
     http.Response response = await http.get('http://192.168.0.5:8080/api/user');
@@ -34,6 +43,60 @@ class _HomePageState extends State<HomePage> {
     debugPrint(usersData.length.toString());
   }
 
+  /*** ----------------------------- ***/
+  /**
+   * metodo para que se permite crear un json y mandar
+   * los datos a la base
+   */
+
+  Future<http.Response> postRequest () async {
+    print("entrando");
+    //tomar los datos tecleados por el usuario
+    String user = myController2.text;
+    String name = myController.text;
+
+    var url ='http://192.168.0.5:8080/api/user/create';
+
+    Map data = {
+      'nombre':name,
+      'usuario':user,
+      'avatar':'deloitte'
+    };
+
+    //encode Map to JSON
+    var body = json.encode(data);
+
+    var response = await http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: body
+    );
+
+    if(response.statusCode == 200){
+      Fluttertoast.showToast(
+          msg: "Registro guardado",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+
+    }else{
+      Fluttertoast.showToast(
+          msg: "Operacion fallida",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIos: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
+    print("${response.statusCode}");
+    print("${response.body}");
+    return response;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +109,13 @@ class _HomePageState extends State<HomePage> {
       home: DefaultTabController(
         length: 2,
         child: Scaffold(
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              getUsers();
+            },
+            child: Icon(Icons.refresh),
+            backgroundColor: Colors.redAccent,
+          ),
           appBar: AppBar(
             bottom: TabBar(
               tabs: [
@@ -57,45 +127,158 @@ class _HomePageState extends State<HomePage> {
           ),
           body: TabBarView(
             children: [
-              ListView.builder(
-                itemCount: usersData == null ? 0 : usersData.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        children: <Widget>[
-                          // Text("${usersData[index]["_id"]} - "),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              "$index",
-                              style: TextStyle(
-                                  fontSize: 20.0, fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          CircleAvatar(
-                              backgroundImage:
-                                  NetworkImage(usersData[index]['avatar'])),
-                          Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: Text(
-                              "${usersData[index]["usuario"]} ${usersData[index]["nombre"]}",
-                              style: TextStyle(
-                                  fontSize: 20.0, fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                        ],
-                      ),
+              SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      child: _Form(context),
                     ),
-                  );
-                },
+                    ListView.builder(
+                      scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      itemCount: usersData == null ? 0 : usersData.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return Card(
+                          child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                children: <Widget>[
+                                  Container(
+                                    child: Row(
+                                      children: <Widget>[
+                                        // Text("${usersData[index]["_id"]} - "),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            "$index",
+                                            style: TextStyle(
+                                                fontSize: 20.0,
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                        ),
+                                        // CircleAvatar(
+                                        // backgroundImage:
+                                        // NetworkImage(usersData[index]['avatar'])),
+                                        Padding(
+                                          padding: const EdgeInsets.all(10.0),
+                                          child: Text(
+                                            "${usersData[index]["usuario"]} ${usersData[index]["nombre"]}",
+                                            style: TextStyle(
+                                                fontSize: 20.0,
+                                                fontWeight: FontWeight.w700),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              )),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
-              Icon(Icons.directions_transit),
+              // widget de formulario de user
+              Form(
+
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Padding(padding: const EdgeInsets.all(10.0)),
+
+                    TextFormField(
+                      style: TextStyle(
+                          fontSize: 20.0, fontWeight: FontWeight.w700),
+                      // Recupera el texto que el usuario ha digitado utilizando nuestro
+                      controller: myController,
+                      decoration: InputDecoration(
+                          labelText: 'Nombre'
+                      ),
+                      validator: (input) => input.isEmpty ? ' Es obligatorio el Nombre' : null,
+                      onSaved: (input) => _nombre = input,
+                    ),
+                    SizedBox(height:10),
+                    Padding(padding: const EdgeInsets.all(10.0)),
+
+                    TextFormField(
+                      style: TextStyle(
+                          fontSize: 20.0, fontWeight: FontWeight.w700),
+                      // Recupera el texto que el usuario ha digitado utilizando nuestro
+                      controller: myController2,
+                      decoration: InputDecoration(
+                        labelText: 'Usuario',
+                      ),
+                      validator: (input) => input.isEmpty ? ' Es obligario el usuario': null,
+                      onSaved: (input) => _usuario = input,
+                    ),
+                    SizedBox(height:20),
+                    Row(
+
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: RaisedButton(
+                              //color: Colors.red,
+                              onPressed: _submit,
+                              child: Text('Registrate'),
+                            )
+                        )
+                      ],
+                    )
+                  ],
+                ),
+              )
             ],
           ),
         ),
       ),
     );
+  }
+
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  Widget _Form(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          TextFormField(
+            decoration: const InputDecoration(
+              hintText: 'Search',
+            ),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter some text';
+              }
+              return value;
+            },
+          ),
+          Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Center(
+                child: RaisedButton(
+                  onPressed: () {
+                    if (_formKey.currentState.validate()) {}
+                  },
+                  child: Text('Search'),
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+
+  //vallidacion y evento del button
+  void _submit() {
+    if(formKey.currentState.validate()) {
+      postRequest();
+    }
+
   }
 }
