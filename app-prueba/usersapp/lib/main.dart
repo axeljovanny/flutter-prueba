@@ -112,7 +112,7 @@ class _HomePageState extends State<HomePage> {
         child: Scaffold(
           floatingActionButton: FloatingActionButton(
             onPressed: () {
-              getUsers();
+              _alert();
             },
             child: Icon(Icons.refresh),
             backgroundColor: Colors.redAccent,
@@ -120,7 +120,7 @@ class _HomePageState extends State<HomePage> {
           appBar: AppBar(
             bottom: TabBar(
               tabs: [
-                Tab(icon: Icon(Icons.search)),
+                Tab(icon: Icon(Icons.supervised_user_circle)),
                 Tab(icon: Icon(Icons.create)),
               ],
             ),
@@ -128,7 +128,7 @@ class _HomePageState extends State<HomePage> {
           ),
           body: TabBarView(
             children: [
-              _Form(context),
+              _Lista(context),
               _Create(context),
             ],
           ),
@@ -204,8 +204,7 @@ class _HomePageState extends State<HomePage> {
                         // Text("${usersData[index]["_id"]} - "),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            "$index",
+                          child: Text("${usersData[index]["id"]} - ",
                             style: TextStyle(
                                 fontSize: 20.0, fontWeight: FontWeight.w500),
                           ),
@@ -233,39 +232,34 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget _Form(BuildContext context) {
-    return ListView(
-      children: <Widget>[
-        Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              TextFormField(
-                decoration: const InputDecoration(
-                  hintText: 'Search',
-                ),
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter some text';
-                  }
-                  return null;
-                },
-                controller: searchController,
-                onSaved: (input) => _search = input,
-              ),
-              Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: Center(
-                    child: RaisedButton(
-                      onPressed: _buscar,
-                      child: Text('Search'),
-                    ),
-                  )),
-            ],
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          TextFormField(
+            decoration: const InputDecoration(
+              hintText: 'Search',
+            ),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter some text';
+              }
+              return null;
+            },
+            controller: searchController,
+            onSaved: (input) => _search = input,
           ),
-        ),
-        _Lista(context)
-      ],
+          Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Center(
+                child: RaisedButton(
+                  onPressed: _buscar,
+                  child: Text('Search'),
+                ),
+              )),
+        ],
+      ),
     );
   }
 
@@ -279,5 +273,14 @@ class _HomePageState extends State<HomePage> {
   //vallidacion y evento del button
   void _buscar() {
     getSearch();
+  }
+
+  void _alert() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+              title: Text("Buscar ID:"), content: _Form(context));
+        });
   }
 }
