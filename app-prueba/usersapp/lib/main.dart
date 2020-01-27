@@ -3,11 +3,15 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'contador.dart';
+import 'package:flutter/services.dart';
+
 
 //MAIN
 void main() {
   runApp(
     MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: HomePage(),
     ),
   );
@@ -33,7 +37,7 @@ class _HomePageState extends State<HomePage> {
 
   Future getUsers() async {
     http.Response response =
-        await http.get('http://192.168.0.38:8080/api/clientes');
+    await http.get('http://192.168.0.39:8080/api/clientes');
     setState(() {
       usersData = json.decode(response.body);
       print("------JSON: >");
@@ -50,7 +54,7 @@ class _HomePageState extends State<HomePage> {
     String user = myController2.text;
     String name = myController.text;
 
-    var url = 'http://192.168.0.38:8080/api/clientes';
+    var url = 'http://192.168.0.39:8080/api/clientes';
 
     Map data = {'nombre': name, 'usuario': user, 'avatar': 'deloitte'};
 
@@ -87,7 +91,7 @@ class _HomePageState extends State<HomePage> {
     print("entrando");
     //tomar los datos tecleados por el usuario
     String search = searchController.text;
-    var url = 'http://192.168.0.38:8080/api/clientes/';
+    var url = 'http://192.168.0.39:8080/api/clientes/';
 
     http.Response response = await http.get(url + search);
 
@@ -152,7 +156,7 @@ class _HomePageState extends State<HomePage> {
             controller: myController,
             decoration: InputDecoration(labelText: 'Nombre'),
             validator: (input) =>
-                input.isEmpty ? ' Es obligatorio el Nombre' : null,
+            input.isEmpty ? ' Es obligatorio el Nombre' : null,
             onSaved: (input) => _nombre = input,
           ),
           SizedBox(height: 10),
@@ -165,7 +169,7 @@ class _HomePageState extends State<HomePage> {
               labelText: 'Usuario',
             ),
             validator: (input) =>
-                input.isEmpty ? ' Es obligario el usuario' : null,
+            input.isEmpty ? ' Es obligario el usuario' : null,
             onSaved: (input) => _usuario = input,
           ),
           SizedBox(height: 20),
@@ -200,6 +204,7 @@ class _HomePageState extends State<HomePage> {
                 children: <Widget>[
                   Container(
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         // Text("${usersData[index]["_id"]} - "),
                         Padding(
@@ -220,6 +225,7 @@ class _HomePageState extends State<HomePage> {
                                 fontSize: 20.0, fontWeight: FontWeight.w700),
                           ),
                         ),
+                        _Botones("${usersData[index]["id"]}", "${usersData[index]["nombre"]}", "${usersData[index]["usuario"]}"),
                       ],
                     ),
                   ),
@@ -228,6 +234,18 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+    @override
+    Widget _Botones(id, nombre, usuario) {
+
+    return Row(
+      children: <Widget>[
+        FloatingActionButton(heroTag: "btn_editar$id", mini: true, child: Icon(Icons.edit), onPressed: () => _editar(id, nombre, usuario),),
+        FloatingActionButton(heroTag: "btn_Borrar$id",mini: true, child: Icon(Icons.delete), onPressed: () => _borrar(id),),
+      ],
+    ); 
+    
   }
 
   @override
@@ -267,12 +285,34 @@ class _HomePageState extends State<HomePage> {
   void _submit() {
     if (formKey.currentState.validate()) {
       postRequest();
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+      getUsers();
     }
   }
 
   //vallidacion y evento del button
   void _buscar() {
     getSearch();
+  }
+
+  // Editar Usuario
+  void _editar(id, nombre, usuario) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ContadorPage(), settings: RouteSettings(arguments: [id, nombre, usuario])),
+    );
+  }
+
+  void _borrar(id) async  {
+    
+    String url = 'http://192.168.0.39:8080/api/clientes/';
+
+    http.Response response = await http.delete(url + id);
+    print("${response.statusCode}");
+    getUsers();
   }
 
   void _alert() {
@@ -283,4 +323,5 @@ class _HomePageState extends State<HomePage> {
               title: Text("Buscar ID:"), content: _Form(context));
         });
   }
+  
 }
